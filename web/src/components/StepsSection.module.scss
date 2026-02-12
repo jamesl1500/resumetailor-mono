@@ -1,0 +1,40 @@
+.steps {
+  margin-bottom: 100px;
+}
+
+.sectionHeader {
+  margin-bottom: 28px;
+}
+
+.sectionHeader h2 {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3vw, 40px);
+}
+
+.sectionHeader p {
+  color: var(--ink-muted);
+  max-width: 480px;
+}
+
+.stepGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.stepCard {
+  background: #fff;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 200px;
+}
+
+.stepCard span {
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--accent);
+}

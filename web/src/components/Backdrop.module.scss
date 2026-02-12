@@ -1,0 +1,57 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.orbOne,
+.orbTwo {
+  position: absolute;
+  width: 380px;
+  height: 380px;
+  border-radius: 50%;
+  filter: blur(0px);
+  opacity: 0.7;
+  animation: float 16s ease-in-out infinite;
+}
+
+.orbOne {
+  background: radial-gradient(circle at 30% 30%, #fddfb7, transparent 60%);
+  top: -100px;
+  left: -80px;
+}
+
+.orbTwo {
+  background: radial-gradient(circle at 30% 30%, #f4c4b0, transparent 65%);
+  bottom: -120px;
+  right: -140px;
+  animation-delay: 4s;
+}
+
+.grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+      rgba(150, 120, 100, 0.1) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(150, 120, 100, 0.08) 1px,
+      transparent 1px
+    );
+  background-size: 80px 80px;
+  opacity: 0.45;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(20px);
+  }
+}

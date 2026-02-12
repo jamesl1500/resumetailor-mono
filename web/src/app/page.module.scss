@@ -1,0 +1,37 @@
+.page {
+  --ink: #1d1a15;
+  --ink-muted: #6a5f55;
+  --accent: #c95f3c;
+  --accent-2: #e1a165;
+  --surface: #fbf7f2;
+  --surface-2: #fff4e6;
+  --border: #eadfd4;
+  --shadow: 0 24px 80px rgba(75, 48, 32, 0.2);
+
+  position: relative;
+  min-height: 100vh;
+  color: var(--ink);
+  background: #f7f1e9;
+}
+
+.main {
+  position: relative;
+  z-index: 1;
+  padding: 80px 80px 140px;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+@media (max-width: 1100px) {
+  .main {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+}
+
+@media (max-width: 540px) {
+  .main {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
