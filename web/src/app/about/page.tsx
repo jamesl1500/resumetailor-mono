@@ -48,10 +48,10 @@ export default function AboutPage() {
         </section>
 
         <section className={styles.section}>
-          <h2>Who it's for</h2>
+          <h2>Who it&apos;s for</h2>
           <p>
             ResumeTailor is designed for professionals applying to multiple
-            roles with different narratives. If you're targeting product roles
+            roles with different narratives. If you&apos;re targeting product roles
             in some companies and strategy roles in others, this tool helps you
             tell the right story for each audience.
           </p>
@@ -60,7 +60,7 @@ export default function AboutPage() {
         <section className={styles.section}>
           <h2>Our approach</h2>
           <p>
-            We don't believe in one-size-fits-all resumes. Every role has
+            We don&apos;t believe in one-size-fits-all resumes. Every role has
             different priorities, and your resume should reflect that. We
             extract what matters from your background, analyze what the role
             needs, and connect the two with precision.

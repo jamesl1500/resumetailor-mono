@@ -6,6 +6,7 @@ from app.models.experience_model import Experience
 from app.models.job_analysis_model import JobAnalysis
 from app.models.resume_profile_model import ResumeProfile
 from app.models.tailored_resume_model import TailoredResume
+from app.models.visitor_identity_model import VisitorIdentity
 
 __all__ = [
 	"User",
@@ -16,4 +17,5 @@ __all__ = [
 	"JobAnalysis",
 	"ResumeProfile",
 	"TailoredResume",
+	"VisitorIdentity",
 ]

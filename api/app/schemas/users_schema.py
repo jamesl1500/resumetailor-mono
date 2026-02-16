@@ -47,3 +47,8 @@ class UserResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class SignupResponse(BaseModel):
+    user: UserResponse
+    message: str

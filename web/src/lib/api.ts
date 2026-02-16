@@ -28,6 +28,12 @@ export const apiUpload = async <T,>(endpoint: string, formData: FormData) => {
   return (await response.json()) as T;
 };
 
+export const trackVisit = async () => {
+  await fetch(`${API_BASE}/users/track-visit`, {
+    method: "POST",
+  });
+};
+
 export const buildOutputFiles = (paths: string[], id: string) =>
   paths.map((path) => {
     const name = path.split("/").slice(-1)[0];

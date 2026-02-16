@@ -19,3 +19,4 @@ class User(Base):
     education = relationship('Education', backref='user', lazy=True)
     experience = relationship('Experience', backref='user', lazy=True)
     files = relationship('File', backref='user', lazy=True)
+    visitor_identities = relationship('VisitorIdentity', backref='user', lazy=True)

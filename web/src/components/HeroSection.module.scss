@@ -194,6 +194,15 @@
   border: 1px solid rgba(201, 95, 60, 0.3);
 }
 
+.secondaryButton {
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
 .activityFeed {
   margin-top: 20px;
   padding-top: 16px;

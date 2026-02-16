@@ -56,7 +56,7 @@ export default function TermsPage() {
         <section className={styles.section}>
           <h2>Disclaimers</h2>
           <p>
-            The service is provided "as is" without warranties of any kind. We
+            The service is provided &quot;as is&quot; without warranties of any kind. We
             do not guarantee interview outcomes or hiring decisions.
           </p>
         </section>

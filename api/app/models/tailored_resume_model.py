@@ -8,6 +8,7 @@ class TailoredResume(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4, index=True)
     user_id = Column(UUID(as_uuid=True), nullable=True, index=True)
+    source_ip = Column(String(64), nullable=True, index=True)
     job_analysis_id = Column(UUID(as_uuid=True), ForeignKey("job_analyses.id"), nullable=False)
     resume_profile_id = Column(UUID(as_uuid=True), ForeignKey("resume_profiles.id"), nullable=False)
     target_role = Column(String(255), nullable=True)

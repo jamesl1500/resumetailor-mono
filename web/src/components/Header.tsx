@@ -23,16 +23,17 @@ const Header = memo(function Header({ onStartTailoring }: HeaderProps) {
 
   return (
     <header className={styles.header}>
-      <div className={styles.logoMark}>ResumeTailor</div>
+      <div className={styles.logoMark}>
+        <Link href="/" className={styles.logo}>
+          ResumeTailor
+        </Link>
+      </div>
       <nav className={styles.nav}>
         <Link href="/about">About</Link>
         <Link href="/how-it-works">How it works</Link>
         <Link href="/templates">Templates</Link>
       </nav>
       <div className={styles.headerActions}>
-        <Button variant="ghost" type="button">
-          Sign in
-        </Button>
         <Button variant="primary" type="button" onClick={handleStartTailoring}>
           Start tailoring
         </Button>

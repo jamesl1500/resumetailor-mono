@@ -4,21 +4,21 @@ import os
 import re
 import textwrap
 from collections import Counter
-from typing import Optional
+from typing import Any, Optional, cast
 from uuid import UUID, uuid4
 from httpx import get
-from pdfminer.high_level import extract_text as extract_pdf_text
-from reportlab.lib import colors
-from docx import Document
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+from pdfminer.high_level import extract_text as extract_pdf_text  # pyright: ignore[reportMissingImports]
+from reportlab.lib import colors  # pyright: ignore[reportMissingImports, reportMissingModuleSource]
+from docx import Document  # pyright: ignore[reportMissingImports]
+from reportlab.lib.pagesizes import letter  # pyright: ignore[reportMissingImports, reportMissingModuleSource]
+from reportlab.pdfgen import canvas  # pyright: ignore[reportMissingImports, reportMissingModuleSource]
 from sqlalchemy.orm import Session
 from app.config.config import Config
 from app.models.job_analysis_model import JobAnalysis
 from app.models.resume_profile_model import ResumeProfile
 from app.models.tailored_resume_model import TailoredResume
 from app.services.ai_service import analyze_job_with_openai, parse_resume_with_openai
-from docx.shared import Pt, Inches, RGBColor
+from docx.shared import Pt, Inches, RGBColor  # pyright: ignore[reportMissingImports]
 
 STOPWORDS = {
     "the",
@@ -399,6 +399,7 @@ def render_docx(
     name: str,
     role: str,
     summary: str,
+    skills: list[str],
     bullets: list[str],
     experiences: list[dict],
     education: list[dict],
@@ -476,6 +477,8 @@ def render_docx(
                 para = document.add_paragraph(bullet, style="List Bullet")
                 para.paragraph_format.left_indent = Inches(0.15)
                 para.paragraph_format.space_after = Pt(4)
+            spacer = document.add_paragraph("")
+            spacer.paragraph_format.space_after = Pt(15)
 
     if education:
         education_heading = document.add_paragraph("Education")
@@ -510,6 +513,18 @@ def render_docx(
                 para = document.add_paragraph(bullet, style="List Bullet")
                 para.paragraph_format.left_indent = Inches(0.15)
                 para.paragraph_format.space_after = Pt(4)
+            spacer = document.add_paragraph("")
+            spacer.paragraph_format.space_after = Pt(15)
+
+    if skills:
+        skills_heading = document.add_paragraph("Skills")
+        skills_heading.runs[0].bold = True
+        skills_heading.runs[0].font.size = Pt(profile["subtitle_size"])
+        skills_heading.runs[0].font.color.rgb = profile["accent"]
+        skills_heading.paragraph_format.space_after = Pt(6)
+
+        skills_para = document.add_paragraph(", ".join([skill for skill in skills if skill]))
+        skills_para.paragraph_format.space_after = Pt(15)
     document.save(path)
 
 
@@ -518,6 +533,7 @@ def render_pdf(
     name: str,
     role: str,
     summary: str,
+    skills: list[str],
     bullets: list[str],
     experiences: list[dict],
     education: list[dict],
@@ -638,6 +654,7 @@ def render_pdf(
                     prefix = "- " if index == 0 else "  "
                     canvas_obj.drawString(margin, y, f"{prefix}{line}")
                     y -= 14 if (style or "").lower() == "slim" else 15
+            y -= 15
 
     if education:
         y -= 8
@@ -687,6 +704,26 @@ def render_pdf(
                     prefix = "- " if index == 0 else "  "
                     canvas_obj.drawString(margin, y, f"{prefix}{line}")
                     y -= 14 if (style or "").lower() == "slim" else 15
+            y -= 15
+
+    if skills:
+        y -= 8
+        canvas_obj.setFont("Helvetica-Bold", profile["subtitle_size"])
+        canvas_obj.setFillColor(accent)
+        canvas_obj.drawString(margin, y, "Skills")
+        y -= 16
+        canvas_obj.setFont("Helvetica", profile["body_size"])
+        canvas_obj.setFillColor(colors.HexColor("#1D1A15"))
+        skills_line = ", ".join([skill for skill in skills if skill])
+        for line in textwrap.wrap(skills_line, width=95):
+            if y < margin:
+                canvas_obj.showPage()
+                y = height - margin
+                canvas_obj.setFont("Helvetica", profile["body_size"])
+                canvas_obj.setFillColor(colors.HexColor("#1D1A15"))
+            canvas_obj.drawString(margin, y, line)
+            y -= 14 if (style or "").lower() == "slim" else 15
+        y -= 15
 
     canvas_obj.save()
 
@@ -696,6 +733,7 @@ def create_job_analysis(
     job_text: Optional[str],
     job_url: Optional[str],
     user_id: Optional[UUID],
+    source_ip: Optional[str] = None,
 ) -> JobAnalysis:
     source_text = job_text or ""
     source_url = None
@@ -723,6 +761,7 @@ def create_job_analysis(
 
     analysis = JobAnalysis(
         user_id=user_id,
+        source_ip=source_ip,
         source_url=source_url,
         job_text=source_text,
         extracted_text=extracted_text,
@@ -795,10 +834,12 @@ def create_resume_profile(
     resume_text: str,
     file_name: Optional[str],
     user_id: Optional[UUID],
+    source_ip: Optional[str] = None,
 ) -> ResumeProfile:
     parsed, ai_raw, ai_model = parse_resume_text(resume_text)
     profile = ResumeProfile(
         user_id=user_id,
+        source_ip=source_ip,
         file_name=file_name,
         raw_text=resume_text,
         parsed_data=parsed,
@@ -819,7 +860,7 @@ def update_resume_profile_data(
     experience: Optional[list[dict]],
     education: Optional[list[dict]],
 ) -> ResumeProfile:
-    parsed = dict(resume_profile.parsed_data or {})
+    parsed = cast(dict[str, Any], resume_profile.parsed_data or {})
     if statement is not None:
         parsed["summary"] = statement
     if skills is not None:
@@ -829,7 +870,8 @@ def update_resume_profile_data(
     if education is not None:
         parsed["education"] = education
 
-    resume_profile.parsed_data = parsed
+    resume_profile_any = cast(Any, resume_profile)
+    resume_profile_any.parsed_data = parsed
     db.add(resume_profile)
     db.commit()
     db.refresh(resume_profile)
@@ -840,14 +882,7 @@ def _tailor_bullets(bullets: list[str], keywords: list[str]) -> list[str]:
     if not bullets:
         return []
 
-    tailored = []
-    for index, bullet in enumerate(bullets):
-        keyword = keywords[index % max(len(keywords), 1)] if keywords else ""
-        if keyword and keyword.lower() not in bullet.lower():
-            tailored.append(f"{bullet} ({keyword})")
-        else:
-            tailored.append(bullet)
-    return tailored
+    return [bullet for bullet in bullets]
 
 
 def _tailor_experience(experiences: list[dict], keywords: list[str]) -> list[dict]:
@@ -872,11 +907,13 @@ def build_tailored_output(
     target_role: Optional[str],
 ) -> tuple[str, list[str], str, list[dict], list[dict]]:
     role = target_role or "Role"
-    skills = resume_profile.parsed_data.get("skills", [])
-    keywords = job_analysis.keywords
+    parsed_data = cast(dict[str, Any], resume_profile.parsed_data or {})
+    skills = cast(list[str], parsed_data.get("skills", []))
+    keywords = cast(list[str], job_analysis.keywords or [])
 
-    summary = (
-        f"{resume_profile.parsed_data.get('name', 'Candidate')} is a {role} with "
+    parsed_summary = cast(str, (parsed_data.get("summary") or "")).strip()
+    summary = parsed_summary or (
+        f"{cast(str, parsed_data.get('name', 'Candidate'))} is a {role} with "
         f"strengths in {', '.join(skills[:3])}. Focused on {', '.join(keywords[:3])} "
         "and proven delivery across cross-functional teams."
     )
@@ -890,12 +927,12 @@ def build_tailored_output(
             f"Leveraged {', '.join(skills[:2])} to deliver measurable product results"
         )
 
-    base_name = resume_profile.file_name or "Resume"
+    base_name = cast(str, resume_profile.file_name or "Resume")
     base_name = re.sub(r"\.[^/.]+$", "", base_name)
     base_name = sanitize_filename(base_name)
 
-    experiences = resume_profile.parsed_data.get("experience", [])
-    education = resume_profile.parsed_data.get("education", [])
+    experiences = cast(list[dict], parsed_data.get("experience", []))
+    education = cast(list[dict], parsed_data.get("education", []))
 
     tailored_experience = _tailor_experience(experiences, keywords)
     tailored_education = _tailor_education(education, keywords)
@@ -910,11 +947,14 @@ def create_tailored_resume(
     target_role: Optional[str],
     user_id: Optional[UUID],
     style: Optional[str] = None,
+    source_ip: Optional[str] = None,
 ) -> TailoredResume:
     selected_style = style or "Modern"
     summary, bullets, base_name, tailored_experience, tailored_education = build_tailored_output(
         job_analysis, resume_profile, target_role
     )
+    parsed_data = cast(dict[str, Any], resume_profile.parsed_data or {})
+    skills = cast(list[str], parsed_data.get("skills", []))
 
     tailored_id = uuid4()
     folder = ensure_storage_dir("tailored", str(tailored_id))
@@ -925,13 +965,14 @@ def create_tailored_resume(
     relative_pdf = f"tailored/{tailored_id}/{pdf_name}"
     relative_docx = f"tailored/{tailored_id}/{docx_name}"
 
-    name = resume_profile.parsed_data.get("name") or "Candidate"
+    name = cast(str, parsed_data.get("name") or "Candidate")
     role = target_role or "Role"
     render_pdf(
         pdf_path,
         name,
         role,
         summary,
+        skills,
         bullets,
         tailored_experience,
         tailored_education,
@@ -942,6 +983,7 @@ def create_tailored_resume(
         name,
         role,
         summary,
+        skills,
         bullets,
         tailored_experience,
         tailored_education,
@@ -951,6 +993,7 @@ def create_tailored_resume(
     tailored = TailoredResume(
         id=tailored_id,
         user_id=user_id,
+        source_ip=source_ip,
         job_analysis_id=job_analysis.id,
         resume_profile_id=resume_profile.id,
         target_role=target_role,

@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.scss";
 import Backdrop from "../components/Backdrop";
@@ -11,7 +11,7 @@ import WorkspaceSection from "../components/WorkspaceSection";
 import StepsSection from "../components/StepsSection";
 import TemplatesSection from "../components/TemplatesSection";
 import Footer from "../components/Footer";
-import { apiPost, apiUpload, buildOutputFiles } from "../lib/api";
+import { apiPost, apiUpload, buildOutputFiles, trackVisit } from "../lib/api";
 import type {
   AnalyzeJobResponse,
   GenerateResumeResponse,
@@ -94,6 +94,10 @@ export default function Home() {
   const [activity, setActivity] = useState<string[]>([]);
   const [results, setResults] = useState<Results | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    trackVisit().catch(() => undefined);
+  }, []);
 
   const handleSetUploadTrigger = useCallback((trigger: () => void) => {
     uploadTriggerRef.current = trigger;

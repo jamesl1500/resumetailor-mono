@@ -8,6 +8,7 @@ class ResumeProfile(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4, index=True)
     user_id = Column(UUID(as_uuid=True), nullable=True, index=True)
+    source_ip = Column(String(64), nullable=True, index=True)
     file_name = Column(String(255), nullable=True)
     raw_text = Column(Text, nullable=False)
     parsed_data = Column(JSON, nullable=False)

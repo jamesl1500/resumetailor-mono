@@ -8,6 +8,7 @@ class JobAnalysis(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4, index=True)
     user_id = Column(UUID(as_uuid=True), nullable=True, index=True)
+    source_ip = Column(String(64), nullable=True, index=True)
     source_url = Column(String(1024), nullable=True)
     job_text = Column(Text, nullable=False)
     extracted_text = Column(Text, nullable=False)

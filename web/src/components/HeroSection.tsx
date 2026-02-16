@@ -2,6 +2,7 @@ import { memo, useEffect, useRef } from "react";
 import Button from "./ui/Button";
 import styles from "./HeroSection.module.scss";
 import type { HeroSectionProps } from "../types/home";
+import Link from "next/link";
 
 const HeroSection = memo(function HeroSection({
   stats,
@@ -49,9 +50,9 @@ const HeroSection = memo(function HeroSection({
           <Button variant="primary" type="button" onClick={handleTryItNow}>
             Try It Now
           </Button>
-          <Button variant="secondary" type="button">
-            Sign in
-          </Button>
+          <Link href="/how-it-works" className={styles.secondaryButton}>
+            Learn More
+          </Link>
         </div>
         <div className={styles.statRow}>
           {stats.map((stat) => (

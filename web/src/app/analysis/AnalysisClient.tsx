@@ -7,6 +7,7 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import Button from "../../components/ui/Button";
 import styles from "./analysis.module.scss";
+import { trackVisit } from "../../lib/api";
 import { API_BASE, buildPreviewOutputFiles } from "../../lib/api";
 import type {
   AnalysisClientProps,
@@ -74,6 +75,10 @@ export default function AnalysisClient({ data }: AnalysisClientProps) {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    trackVisit().catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     try {
