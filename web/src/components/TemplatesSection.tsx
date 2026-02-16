@@ -1,15 +1,8 @@
+import { memo } from "react";
 import styles from "./TemplatesSection.module.scss";
+import type { TemplatesSectionProps } from "../types/home";
 
-type Template = {
-  title: string;
-  detail: string;
-};
-
-type TemplatesSectionProps = {
-  templates: Template[];
-};
-
-export default function TemplatesSection({ templates }: TemplatesSectionProps) {
+const TemplatesSection = memo(function TemplatesSection({ templates }: TemplatesSectionProps) {
   return (
     <section className={styles.templates} id="templates">
       <div className={styles.sectionHeader}>
@@ -27,4 +20,6 @@ export default function TemplatesSection({ templates }: TemplatesSectionProps) {
       </div>
     </section>
   );
-}
+});
+
+export default TemplatesSection;

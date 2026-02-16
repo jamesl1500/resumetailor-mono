@@ -1,15 +1,9 @@
+import { memo } from "react";
 import styles from "./WorkspaceSection.module.scss";
 import Button from "./ui/Button";
-import type { Results, Status } from "../lib/types";
+import type { WorkspaceSectionProps } from "../types/home";
 
-type WorkspaceSectionProps = {
-  results: Results | null;
-  targetRole: string;
-  experienceLevel: string;
-  status: Status;
-};
-
-export default function WorkspaceSection({
+const WorkspaceSection = memo(function WorkspaceSection({
   results,
   targetRole,
   experienceLevel,
@@ -134,4 +128,6 @@ export default function WorkspaceSection({
       </div>
     </section>
   );
-}
+});
+
+export default WorkspaceSection;

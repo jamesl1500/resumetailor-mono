@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.scss";
 import Backdrop from "../components/Backdrop";
@@ -11,36 +11,14 @@ import WorkspaceSection from "../components/WorkspaceSection";
 import StepsSection from "../components/StepsSection";
 import TemplatesSection from "../components/TemplatesSection";
 import Footer from "../components/Footer";
-import type { Results, Status } from "../lib/types";
-
-type ParseResumeResponse = {
-  id: string;
-  file_name?: string | null;
-  parsed_data: {
-    name?: string | null;
-    email?: string | null;
-    phone?: string | null;
-    skills?: string[];
-  };
-};
-
-type AnalyzeJobResponse = {
-  id: string;
-  keywords: string[];
-  signals: {
-    levels: string[];
-    tools: string[];
-    focus: string[];
-  };
-  summary: string;
-};
-
-type GenerateResumeResponse = {
-  id: string;
-  tailored_summary: string;
-  tailored_bullets: string[];
-  output_files: string[];
-};
+import { apiPost, apiUpload, buildOutputFiles } from "../lib/api";
+import type {
+  AnalyzeJobResponse,
+  GenerateResumeResponse,
+  ParseResumeResponse,
+  Results,
+  Status,
+} from "../types/tailor";
 
 const sampleJobDescription = `We are looking for a product designer to partner with product and engineering on discovery,
 prototype new experiences, and deliver polished UI. Experience running workshops, creating design systems, and shipping
@@ -104,38 +82,9 @@ const buildGapList = (focusSignals: string[]) => {
   return gaps.length > 0 ? gaps : defaults;
 };
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
-
-const apiPost = async <T,>(endpoint: string, payload: unknown) => {
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error("Request failed");
-  }
-
-  return (await response.json()) as T;
-};
-
-const apiUpload = async <T,>(endpoint: string, formData: FormData) => {
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    method: "POST",
-    body: formData,
-  });
-
-  if (!response.ok) {
-    throw new Error("Upload failed");
-  }
-
-  return (await response.json()) as T;
-};
-
 export default function Home() {
   const router = useRouter();
+  const uploadTriggerRef = useRef<(() => void) | null>(null);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [jobText, setJobText] = useState("");
   const [targetRole, setTargetRole] = useState("Software Engineer");
@@ -146,10 +95,21 @@ export default function Home() {
   const [results, setResults] = useState<Results | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const canSubmit =
-    Boolean(resumeFile) &&
-    jobText.trim().length > 30 &&
-    (status === "idle" || status === "ready" || status === "error");
+  const handleSetUploadTrigger = useCallback((trigger: () => void) => {
+    uploadTriggerRef.current = trigger;
+  }, []);
+
+  const handleStartTailoring = useCallback(() => {
+    uploadTriggerRef.current?.();
+  }, []);
+
+  const canSubmit = useMemo(
+    () =>
+      Boolean(resumeFile) &&
+      jobText.trim().length > 30 &&
+      (status === "idle" || status === "ready" || status === "error"),
+    [jobText, resumeFile, status]
+  );
 
   const statusLabel = useMemo(() => {
     switch (status) {
@@ -234,13 +194,10 @@ export default function Home() {
 
       const matchScore = buildMatchScore(jobText.length);
       const gaps = buildGapList(analyzeResponse.signals.focus);
-      const outputFiles = generateResponse.output_files.map((path) => {
-        const name = path.split("/").slice(-1)[0];
-        const url = `${API_BASE}/tailor/download/${generateResponse.id}/${encodeURIComponent(
-          name
-        )}`;
-        return { name, url };
-      });
+      const outputFiles = buildOutputFiles(
+        generateResponse.output_files,
+        generateResponse.id
+      );
 
       setResults({
         candidateName: parseResponse.parsed_data?.name ?? "Candidate",
@@ -262,13 +219,14 @@ export default function Home() {
       setStatus("error");
       setProgress(0);
       setErrorMessage("Something went wrong. Try again with another file.");
+      console.error("Error during submission:", error);
     }
   };
 
   return (
     <div className={styles.page}>
       <Backdrop />
-      <Header />
+      <Header onStartTailoring={handleStartTailoring} />
       <main className={styles.main}>
         <HeroSection
           stats={stats}
@@ -288,6 +246,7 @@ export default function Home() {
           onUseSample={handleSample}
           onReset={handleReset}
           onSubmit={handleSubmit}
+          onTriggerUpload={handleSetUploadTrigger}
         />
         {status === "ready" && results ? (
           <WorkspaceSection

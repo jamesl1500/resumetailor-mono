@@ -1,10 +1,5 @@
 import { NextResponse } from "next/server";
-
-type AnalyzeJobPayload = {
-  jobText?: string;
-  targetRole?: string;
-  experienceLevel?: string;
-};
+import type { AnalyzeJobPayload } from "../../../types/tailor";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

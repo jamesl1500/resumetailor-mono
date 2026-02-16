@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-
-type ParseResumePayload = {
-  fileName?: string;
-};
+import type { ParseResumePayload } from "../../../types/tailor";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

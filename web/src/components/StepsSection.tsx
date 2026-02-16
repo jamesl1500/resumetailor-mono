@@ -1,15 +1,8 @@
+import { memo } from "react";
 import styles from "./StepsSection.module.scss";
+import type { StepsSectionProps } from "../types/home";
 
-type Step = {
-  title: string;
-  description: string;
-};
-
-type StepsSectionProps = {
-  steps: Step[];
-};
-
-export default function StepsSection({ steps }: StepsSectionProps) {
+const StepsSection = memo(function StepsSection({ steps }: StepsSectionProps) {
   return (
     <section className={styles.steps} id="how">
       <div className={styles.sectionHeader}>
@@ -27,4 +20,6 @@ export default function StepsSection({ steps }: StepsSectionProps) {
       </div>
     </section>
   );
-}
+});
+
+export default StepsSection;

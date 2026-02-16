@@ -1,34 +1,9 @@
-import type { FormEvent } from "react";
-import { useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import Button from "./ui/Button";
 import styles from "./HeroSection.module.scss";
+import type { HeroSectionProps } from "../types/home";
 
-type Stat = {
-  label: string;
-  value: string;
-};
-
-type HeroSectionProps = {
-  stats: Stat[];
-  statusLabel: string;
-  progress: number;
-  resumeFile: File | null;
-  jobText: string;
-  targetRole: string;
-  experienceLevel: string;
-  canSubmit: boolean;
-  errorMessage: string | null;
-  activity: string[];
-  onResumeChange: (file: File | null) => void;
-  onJobTextChange: (value: string) => void;
-  onTargetRoleChange: (value: string) => void;
-  onExperienceChange: (value: string) => void;
-  onUseSample: () => void;
-  onReset: () => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-};
-
-export default function HeroSection({
+const HeroSection = memo(function HeroSection({
   stats,
   statusLabel,
   progress,
@@ -46,6 +21,7 @@ export default function HeroSection({
   onUseSample,
   onReset,
   onSubmit,
+  onTriggerUpload,
 }: HeroSectionProps) {
   // Focus on "Upload resume" input when the user clicks "Try it now".
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -53,6 +29,12 @@ export default function HeroSection({
   const handleTryItNow = () => {
     fileInputRef.current?.click();
   };
+
+  useEffect(() => {
+    if (onTriggerUpload) {
+      onTriggerUpload(handleTryItNow);
+    }
+  }, [onTriggerUpload]);
 
   return (
     <section className={styles.hero}>
@@ -186,4 +168,6 @@ export default function HeroSection({
       </div>
     </section>
   );
-}
+});
+
+export default HeroSection;

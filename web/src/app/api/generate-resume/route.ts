@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server";
-
-type GenerateResumePayload = {
-  baseName?: string;
-  targetRole?: string;
-};
+import type { GenerateResumePayload } from "../../../types/tailor";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

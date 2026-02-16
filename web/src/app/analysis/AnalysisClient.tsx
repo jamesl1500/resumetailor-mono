@@ -7,76 +7,16 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import Button from "../../components/ui/Button";
 import styles from "./analysis.module.scss";
-
-type StyleOption = "Slim" | "Modern" | "Fancy";
-
-type StyleCard = {
-  name: StyleOption;
-  description: string;
-  emphasis: string[];
-};
-
-type AnalysisData = {
-  id: string;
-  matchScore: number;
-  summary: string;
-  keywords: string[];
-  signals: {
-    levels: string[];
-    tools: string[];
-    focus: string[];
-  };
-  outputs: { name: string; url: string; previewUrl?: string }[];
-  statement: string;
-  skills: string[];
-  experience: ExperienceEntry[];
-  education: EducationEntry[];
-  targetRole?: string;
-  candidateName?: string;
-  style?: StyleOption;
-};
-
-type AnalysisClientProps = {
-  data: AnalysisData;
-};
-
-type TailorResultResponse = {
-  id: string;
-  match_score: number;
-  summary: string;
-  keywords: string[];
-  signals: {
-    levels: string[];
-    tools: string[];
-    focus: string[];
-  };
-  outputs: string[];
-  statement?: string | null;
-  skills?: string[];
-  experience?: ExperienceEntry[];
-  education?: EducationEntry[];
-  style?: StyleOption | null;
-};
-
-type ExperienceEntry = {
-  title?: string;
-  company?: string;
-  location?: string | null;
-  start_date?: string | null;
-  end_date?: string | null;
-  bullets?: string[];
-};
-
-type EducationEntry = {
-  institution?: string;
-  degree?: string | null;
-  field_of_study?: string | null;
-  start_date?: string | null;
-  end_date?: string | null;
-  bullets?: string[];
-};
-
-type TabKey = "Overview" | "Summary" | "Skills" | "Experience" | "Education" | "Review";
+import { API_BASE, buildPreviewOutputFiles } from "../../lib/api";
+import type {
+  AnalysisClientProps,
+  EducationEntry,
+  ExperienceEntry,
+  StyleCard,
+  StyleOption,
+  TabKey,
+  TailorResultResponse,
+} from "../../types/analysis";
 
 const styleOptions: StyleCard[] = [
   {
@@ -111,18 +51,6 @@ const normalizeBullets = (bullets?: string[]) =>
 const getStorageKey = (id: string, section: "experience" | "education") =>
   `resumetailor:${id}:${section}`;
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
-
-const buildOutputs = (paths: string[], id: string) =>
-  paths.map((path) => {
-    const name = path.split("/").slice(-1)[0];
-    return {
-      name,
-      url: `${API_BASE}/tailor/download/${id}/${encodeURIComponent(name)}`,
-      previewUrl: `${API_BASE}/tailor/preview/${id}/${encodeURIComponent(name)}`,
-    };
-  });
 
 export default function AnalysisClient({ data }: AnalysisClientProps) {
   const router = useRouter();
@@ -164,7 +92,7 @@ export default function AnalysisClient({ data }: AnalysisClientProps) {
         setEducation(JSON.parse(storedEducation) as EducationEntry[]);
       }
     } catch (error) {
-      console.warn("Unable to read local resume edits.");
+      console.warn("Unable to read local resume edits.", error);
     }
   }, [data.id]);
 
@@ -175,7 +103,7 @@ export default function AnalysisClient({ data }: AnalysisClientProps) {
         JSON.stringify(experience)
       );
     } catch (error) {
-      console.warn("Unable to save experience edits.");
+      console.warn("Unable to save experience edits.", error);
     }
   }, [experience, currentId]);
 
@@ -186,7 +114,7 @@ export default function AnalysisClient({ data }: AnalysisClientProps) {
         JSON.stringify(education)
       );
     } catch (error) {
-      console.warn("Unable to save education edits.");
+      console.warn("Unable to save education edits.", error);
     }
   }, [education, currentId]);
 
@@ -390,7 +318,7 @@ export default function AnalysisClient({ data }: AnalysisClientProps) {
       setSummary(previewData.summary);
       setKeywords(previewData.keywords ?? []);
       setSignals(previewData.signals);
-      setOutputs(buildOutputs(previewData.outputs ?? [], previewData.id));
+      setOutputs(buildPreviewOutputFiles(previewData.outputs ?? [], previewData.id));
       setSelectedStyle((previewData.style as StyleOption) ?? selectedStyle);
       setStatement(previewData.statement ?? "");
       setSkills((previewData.skills ?? []).join(", "));
@@ -404,6 +332,7 @@ export default function AnalysisClient({ data }: AnalysisClientProps) {
       }
     } catch (error) {
       setErrorMessage("Unable to update the resume. Try again.");
+      console.error("Error updating the resume:", error);
     } finally {
       setIsSubmitting(false);
     }
